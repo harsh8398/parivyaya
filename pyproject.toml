@@ -5,11 +5,26 @@ description = ""
 authors = ["harsh8398 <pharsh58@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.12"
+transformers = {extras = ["torch"], version = "^4.41.2"}
+pydantic-settings = "^2.2.1"
 
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pydantic = "^2.7.2"
+pandas = "^2.2.2"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+parivyaya = "parivyaya.cli:main"
+
+[tool.black]
+line-length = 100
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+src_paths = ["parivyaya", "tests"]
