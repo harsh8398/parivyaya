@@ -9,8 +9,9 @@ from datetime import datetime
 
 from aiokafka import AIOKafkaProducer
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db, init_db
@@ -71,6 +72,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Parivyaya AI API", version="0.1.0", lifespan=lifespan)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Next.js dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Response models
@@ -195,6 +205,52 @@ async def get_jobs(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.delete("/jobs/{job_id}")
+async def delete_job(job_id: str, db: AsyncSession = Depends(get_db)):
+    """
+    Delete a job and all its associated transactions
+
+    Args:
+        job_id: Job ID
+        db: Database session
+
+    Returns:
+        Success message
+    """
+    try:
+        # Check if job exists
+        job = await db.get(Job, job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        # Delete all transactions for this job
+        from sqlalchemy import delete
+
+        delete_stmt = delete(TransactionDB).where(TransactionDB.job_id == job_id)
+        result = await db.execute(delete_stmt)
+        transactions_deleted = result.rowcount
+
+        # Delete the job
+        await db.delete(job)
+        await db.commit()
+
+        logger.info(
+            f"Deleted job {job_id} ({job.filename}) and {transactions_deleted} transactions"
+        )
+
+        return {
+            "message": "Job deleted successfully",
+            "job_id": job_id,
+            "transactions_deleted": transactions_deleted,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting job {job_id}: {e}", exc_info=True)
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/jobs/{job_id}", response_model=JobResponse)
 async def get_job(job_id: str, db: AsyncSession = Depends(get_db)):
     """
@@ -253,4 +309,96 @@ async def get_transactions(
         return [TransactionResponse.model_validate(t) for t in transactions]
     except Exception as e:
         logger.error(f"Error fetching transactions: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CategorySpending(BaseModel):
+    """Spending data by category for a specific month"""
+
+    category: str
+    total_amount: float
+    transaction_count: int
+
+
+class MonthlySpending(BaseModel):
+    """Spending data for a specific month"""
+
+    year: int
+    month: int
+    categories: list[CategorySpending]
+    total_spending: float
+
+
+@app.get("/spending/analysis", response_model=list[MonthlySpending])
+async def get_spending_analysis(
+    category_type: str = Query(
+        "detailed", description="Category type: 'primary' or 'detailed'"
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get spending analysis by category per month
+
+    Args:
+        category_type: Type of category to group by (primary or detailed)
+        db: Database session
+
+    Returns:
+        List of monthly spending data grouped by category
+    """
+    try:
+        # Determine which category field to use
+        category_field = (
+            TransactionDB.category_primary
+            if category_type == "primary"
+            else TransactionDB.category_detailed
+        )
+
+        # Query to get spending by category and month
+        query = (
+            select(
+                extract("year", TransactionDB.date).label("year"),
+                extract("month", TransactionDB.date).label("month"),
+                category_field.label("category"),
+                func.sum(TransactionDB.amount).label("total_amount"),
+                func.count(TransactionDB.id).label("transaction_count"),
+            )
+            .group_by("year", "month", "category")
+            .order_by("year", "month", "category")
+        )
+
+        result = await db.execute(query)
+        rows = result.all()
+
+        # Group results by month
+        monthly_data = {}
+        for row in rows:
+            year_month = (row.year, row.month)
+            if year_month not in monthly_data:
+                monthly_data[year_month] = {
+                    "year": int(row.year),
+                    "month": int(row.month),
+                    "categories": [],
+                    "total_spending": 0.0,
+                }
+
+            category_spending = CategorySpending(
+                category=row.category,
+                total_amount=float(row.total_amount),
+                transaction_count=row.transaction_count,
+            )
+            monthly_data[year_month]["categories"].append(category_spending)
+            monthly_data[year_month]["total_spending"] += float(row.total_amount)
+
+        # Convert to list and sort by year/month
+        result_list = [
+            MonthlySpending(**data)
+            for data in sorted(
+                monthly_data.values(), key=lambda x: (x["year"], x["month"])
+            )
+        ]
+
+        return result_list
+    except Exception as e:
+        logger.error(f"Error fetching spending analysis: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

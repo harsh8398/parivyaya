@@ -18,11 +18,63 @@ For each transaction, you must:
 2. Extract the transaction title/description
 3. Extract the amount (positive for expenses/debits, negative for income/credits)
 4. Assign currency (default: CAD)
-5. Categorize into primary category: ESSENTIAL, LUXURY, INVESTMENTS, or UNCLASSIFIED
-6. Categorize into detailed category from: Family Support, Groceries, Rent, Utilities, Immigration, Health, Home, Personal Development, Personal Care, Transportation, Stationary, Dine out, Travel, Shopping, Home+, Subscriptions, Gifts, Recreational, Investment, Liabilities, Miscellaneous, Income, Transfers, Unclassified
+5. Categorize into PRIMARY category (first-level classification)
+6. Categorize into DETAILED category (second-level classification)
 7. Assign confidence level: LOW, MEDIUM, HIGH, or VERY_HIGH based on how clear the categorization is
 
-IMPORTANT:
+CATEGORY SYSTEM - TWO LEVELS:
+
+PRIMARY CATEGORIES (category_primary):
+- "Essential" - Necessary expenses, income, investments, liabilities
+- "Luxury" - Non-essential lifestyle and entertainment expenses
+- "N/A" - Account transfers and movements (not real income/expense)
+- "Unclassified" - When you cannot determine the category
+
+DETAILED CATEGORIES (category_detailed) - MUST match one of these exact values:
+
+ESSENTIAL DETAILED CATEGORIES:
+- "Family Support" (remittances, family financial support)
+- "Groceries" (food shopping)
+- "Rent" (housing rent)
+- "Utilities" (wifi, hydro, phone bills)
+- "Immigration" (immigration fees, tests)
+- "Health" (medical, supplements, gym)
+- "Home" (furniture, household items)
+- "Personal Development" (courses, books, education)
+- "Personal Care" (toiletries, haircut, grooming)
+- "Transportation" (bus pass, fuel, car rental)
+- "Stationary" (pens, notebooks, office supplies)
+- "Investment" (RRSP, TFSA, ETF, stocks, crypto)
+- "Liabilities" (loan, mortgage, tax payments)
+- "Miscellaneous" (e-transfers, cash withdrawals)
+- "Income" (salary, pay, refunds, returns)
+
+LUXURY DETAILED CATEGORIES:
+- "Dine out" (restaurants, fast food)
+- "Travel" (flights, hotels, vacation)
+- "Shopping" (clothing, accessories, non-essentials)
+- "Home+" (entertainment electronics, luxury home items)
+- "Subscriptions" (streaming, cloud services)
+- "Gifts" (presents for others)
+- "Recreational" (movies, entertainment, events)
+
+N/A DETAILED CATEGORIES:
+- "Transfers" (between accounts, credit card payments, network fees)
+
+FALLBACK:
+- "Unclassified" (when unclear) - use primary: "Unclassified", detailed: "Unclassified"
+
+CRITICAL RULES:
+1. PRIMARY and DETAILED categories are DIFFERENT fields - never mix them up
+2. PRIMARY must be ONLY: "Essential", "Luxury", "N/A", or "Unclassified"
+3. DETAILED must be ONLY one of the specific categories listed above
+4. Match the DETAILED category to the correct PRIMARY:
+   - Essential detailed categories → primary: "Essential"
+   - Luxury detailed categories → primary: "Luxury"
+   - Transfers → primary: "N/A"
+   - Unclassified → primary: "Unclassified"
+
+EXTRACTION REQUIREMENTS:
 - Extract ALL transactions from the document, maintaining the original order
 - Pay attention to tables, columns, and formatting in the PDF
 - Handle multi-column layouts and complex table structures

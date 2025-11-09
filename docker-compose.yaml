@@ -20,7 +20,7 @@ services:
             retries: 5
 
     broker:
-        image: apache/kafka:latest
+        image: apache/kafka:4.1.1-rc2
         container_name: broker
         hostname: broker
         ports:
@@ -44,7 +44,7 @@ services:
             test:
                 [
                     "CMD-SHELL",
-                    "kafka-broker-api-versions.sh --bootstrap-server broker:9092",
+                    "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server broker:9092",
                 ]
             interval: 10s
             timeout: 5s

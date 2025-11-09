@@ -16,10 +16,10 @@ class Confidence(str, enum.Enum):
 
 
 class CPrimary(str, enum.Enum):
-    ESSENTIAL = "ESSENTIAL"
-    LUXURY = "LUXURY"
-    INVESTMENTS = "INVESTMENTS"
-    UNCLASSIFIED = "UNCLASSIFIED"
+    ESSENTIAL = "Essential"
+    LUXURY = "Luxury"
+    NA = "N/A"
+    UNCLASSIFIED = "Unclassified"
 
 
 class CDetailed(str, enum.Enum):
@@ -67,7 +67,7 @@ class Transaction(BaseModel):
                     "title": "Grocery Store Purchase",
                     "amount": 125.50,
                     "currency": "CAD",
-                    "category_primary": "ESSENTIAL",
+                    "category_primary": "Essential",
                     "category_detailed": "Groceries",
                     "category_confidence_level": "HIGH",
                 }
