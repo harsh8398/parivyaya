@@ -1,30 +1,25 @@
-[tool.poetry]
+[project]
 name = "parivyaya"
 version = "0.1.0"
-description = ""
-authors = ["harsh8398 <pharsh58@gmail.com>"]
-
-[tool.poetry.dependencies]
-python = "^3.12"
-transformers = {extras = ["torch"], version = "^4.41.2"}
-pydantic-settings = "^2.2.1"
-
-pydantic = "^2.7.2"
-pandas = "^2.2.2"
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.2.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "click>=8.3.0",
+    "pandas>=2.3.3",
+    "pydantic>=2.12.4",
+    "pydantic-settings>=2.11.0",
+    "rich>=14.2.0",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.9.8,<0.10.0"]
+build-backend = "uv_build"
 
-[tool.poetry.scripts]
-parivyaya = "parivyaya.cli:main"
+[dependency-groups]
+dev = [
+    "ruff>=0.14.4",
+]
 
-[tool.black]
-line-length = 100
-target-version = ['py312']
-
-[tool.isort]
-profile = "black"
-src_paths = ["parivyaya", "tests"]
+[project.scripts]
+parivyaya = "parivyaya.cli:cli"
