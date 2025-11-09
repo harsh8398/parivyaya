@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from parivyaya.models import Transaction
+from app.models import Transaction
 
 
 def load_transactions(transaction_file: Path) -> List[Transaction]:

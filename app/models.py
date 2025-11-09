@@ -3,7 +3,7 @@ import enum
 from pydantic import BaseModel
 from pydantic.types import PastDate
 
-from parivyaya.settings import get_settings
+from app.settings import get_settings
 
 settings = get_settings()
 
@@ -57,3 +57,30 @@ class Transaction(BaseModel):
     category_primary: str = CPrimary.UNCLASSIFIED
     category_detailed: str = CDetailed.UNCLASSIFIED
     category_confidence_level: Confidence = Confidence.LOW
+
+    class Config:
+        json_schema_extra = {
+            "description": "A financial transaction extracted from a PDF document",
+            "examples": [
+                {
+                    "date": "2024-01-15",
+                    "title": "Grocery Store Purchase",
+                    "amount": 125.50,
+                    "currency": "CAD",
+                    "category_primary": "ESSENTIAL",
+                    "category_detailed": "Groceries",
+                    "category_confidence_level": "HIGH",
+                }
+            ],
+        }
+
+
+class TransactionList(BaseModel):
+    """List of transactions extracted from a PDF"""
+
+    transactions: list[Transaction]
+
+    class Config:
+        json_schema_extra = {
+            "description": "List of financial transactions extracted from a PDF bank statement or receipt"
+        }
