@@ -29,13 +29,12 @@ A tool to analyze your spending from financial statements. "[Parivyaya](https://
 
 ### Infrastructure
 - Docker Compose for local development
-- Kubernetes manifests for production deployment
 - PostgreSQL for data persistence
 - Kafka for message queuing
 
 ## Quick Start
 
-### Using Docker Compose (Recommended)
+### Using Docker Compose
 
 1. Set your Google API key:
    ```bash
@@ -55,23 +54,6 @@ A tool to analyze your spending from financial statements. "[Parivyaya](https://
 4. Stop services:
    ```bash
    make down
-   ```
-
-### Using Kubernetes (kind)
-
-1. Build and deploy:
-   ```bash
-   make deploy
-   ```
-
-2. Access the application:
-   ```bash
-   kubectl port-forward -n parivyaya svc/ui 3000:3000
-   ```
-
-3. Clean up:
-   ```bash
-   make clean
    ```
 
 ## Development Setup
@@ -144,10 +126,10 @@ make dev        # Start UI in development mode
 make build      # Build all Docker images
 make up         # Start all services with docker-compose
 make down       # Stop all services
-make deploy     # Deploy to Kubernetes (kind)
-make logs       # Show application logs
+make logs       # Show docker-compose logs
 make psql       # Open PostgreSQL shell
-make clean      # Clean up all resources
+make clean      # Stop all services
+make clean-db   # Stop services and delete postgres data
 make help       # Show all available commands
 ```
 
@@ -174,7 +156,7 @@ Full API documentation available at: http://localhost:8000/docs (when running)
 
 ## Usage
 
-1. **Using Docker Compose:**
+1. **Start the application:**
    ```bash
    export GOOGLE_API_KEY=your_key
    make up
@@ -190,9 +172,8 @@ Full API documentation available at: http://localhost:8000/docs (when running)
 
 3. **Clean up:**
    ```bash
-   make down  # Docker Compose
-   # or
-   make clean # Complete cleanup including Kubernetes
+   make down      # Stop services (keep data)
+   make clean-db  # Stop services and delete data
    ```
 
 ## Project Structure
@@ -211,10 +192,9 @@ parivyaya/
 ├── ui/                    # Next.js frontend
 │   ├── src/
 │   │   ├── app/          # Next.js app router pages
-│   │   ├── components/   # React components
-│   │   ├── lib/          # API client & utilities
-│   │   └── types/        # TypeScript types
-├── k8s/                   # Kubernetes manifests
+│   ├── components/   # React components
+│   ├── lib/          # API client & utilities
+│   └── types/        # TypeScript types
 ├── data/                  # Sample data & test files
 ├── docker-compose.yaml    # Local development setup
 ├── Dockerfile.worker      # Backend container image
@@ -242,8 +222,6 @@ parivyaya/
 
 **Infrastructure:**
 - Docker & Docker Compose
-- Kubernetes
-- kind (local Kubernetes)
 
 ## License
 
