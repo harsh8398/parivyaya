@@ -2,6 +2,14 @@
 
 A tool to analyze your spending from financial statements. "[Parivyaya](https://www.sanskritdictionary.com/parivyaya/129919/1)" is a Sanskrit word meaning "expense."
 
+![Upload Screenshot](screenshots/upload.png)
+
+## Quick Flow
+
+1. **Upload** - Upload your PDF bank statement
+2. **Transactions** - View extracted transactions automatically classified by AI
+3. **Analysis** - Visualize spending patterns by category and time period
+
 ## Features
 
 - **AI-Powered Transaction Extraction**: Upload PDF bank statements and extract transactions using Google's Gemini AI with LangChain
