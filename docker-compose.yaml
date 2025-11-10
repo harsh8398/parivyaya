@@ -69,19 +69,19 @@ services:
         networks:
             - parivyaya-network
 
-    ui:
-        build:
-            context: .
-            dockerfile: Dockerfile.ui
-        container_name: ui
-        ports:
-            - "3000:3000"
-        environment:
-            NEXT_PUBLIC_API_URL: http://worker:80
-        depends_on:
-            - worker
-        networks:
-            - parivyaya-network
+    # ui:
+    #     build:
+    #         context: .
+    #         dockerfile: Dockerfile.ui
+    #     container_name: ui
+    #     ports:
+    #         - "3000:3000"
+    #     environment:
+    #         NEXT_PUBLIC_API_URL: http://worker:80
+    #     depends_on:
+    #         - worker
+    #     networks:
+    #         - parivyaya-network
 
 networks:
     parivyaya-network:

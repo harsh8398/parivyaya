@@ -1,4 +1,12 @@
-import { Job, MonthlySpending, Transaction, UploadResponse } from "@/types/api";
+import {
+    CategoryTrend,
+    Job,
+    MonthlySpending,
+    TopTransaction,
+    Transaction,
+    UnusualTransaction,
+    UploadResponse,
+} from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -82,6 +90,56 @@ export async function getSpendingAnalysis(
     const response = await fetch(url.toString());
     if (!response.ok) {
         throw new Error("Failed to fetch spending analysis");
+    }
+
+    return response.json();
+}
+
+export async function getTopTransactions(
+    limit: number = 10,
+    categoryType: "primary" | "detailed" = "detailed"
+): Promise<TopTransaction[]> {
+    const url = new URL(`${API_BASE_URL}/spending/top-transactions`);
+    url.searchParams.append("limit", limit.toString());
+    url.searchParams.append("category_type", categoryType);
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+        throw new Error("Failed to fetch top transactions");
+    }
+
+    return response.json();
+}
+
+export async function getUnusualTransactions(
+    threshold: number = 2.0,
+    limit: number = 10,
+    categoryType: "primary" | "detailed" = "detailed"
+): Promise<UnusualTransaction[]> {
+    const url = new URL(`${API_BASE_URL}/spending/unusual-transactions`);
+    url.searchParams.append("threshold", threshold.toString());
+    url.searchParams.append("limit", limit.toString());
+    url.searchParams.append("category_type", categoryType);
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+        throw new Error("Failed to fetch unusual transactions");
+    }
+
+    return response.json();
+}
+
+export async function getCategoryTrends(
+    categoryType: "primary" | "detailed" = "detailed",
+    topN: number = 5
+): Promise<CategoryTrend[]> {
+    const url = new URL(`${API_BASE_URL}/spending/category-trends`);
+    url.searchParams.append("category_type", categoryType);
+    url.searchParams.append("top_n", topN.toString());
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+        throw new Error("Failed to fetch category trends");
     }
 
     return response.json();

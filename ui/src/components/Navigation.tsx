@@ -8,9 +8,8 @@ export default function Navigation() {
     const pathname = usePathname();
 
     const links = [
-        { href: "/", label: "Upload" },
+        { href: "/upload", label: "Upload" },
         { href: "/transactions", label: "Transactions" },
-        { href: "/analysis", label: "Spend Analysis" },
     ];
 
     return (
@@ -19,9 +18,11 @@ export default function Navigation() {
                 <div className="flex h-16 justify-between">
                     <div className="flex">
                         <div className="flex shrink-0 items-center">
-                            <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                                Parivyaya
-                            </h1>
+                            <Link href="/">
+                                <h1 className="cursor-pointer text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                                    Parivyaya
+                                </h1>
+                            </Link>
                         </div>
                         <div className="ml-6 flex space-x-8">
                             {links.map((link) => {

@@ -1,11 +1,27 @@
 "use client";
 
-import { getSpendingAnalysis } from "@/lib/api";
-import { MonthlySpending } from "@/types/api";
+import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
+import { StatsCard } from "@/components/charts/StatsCard";
+import { TopTransactionsTable } from "@/components/charts/TopTransactionsTable";
+import { TrendLineChart } from "@/components/charts/TrendLineChart";
+import { UnusualTransactionsTable } from "@/components/charts/UnusualTransactionsTable";
+import {
+    getCategoryTrends,
+    getTopTransactions,
+    getUnusualTransactions,
+} from "@/lib/api";
+import { CategoryTrend, TopTransaction, UnusualTransaction } from "@/types/api";
+import { DollarSign, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function AnalysisPage() {
-    const [spendingData, setSpendingData] = useState<MonthlySpending[]>([]);
+    const [categoryTrends, setCategoryTrends] = useState<CategoryTrend[]>([]);
+    const [topTransactions, setTopTransactions] = useState<TopTransaction[]>(
+        []
+    );
+    const [unusualTransactions, setUnusualTransactions] = useState<
+        UnusualTransaction[]
+    >([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [categoryType, setCategoryType] = useState<"primary" | "detailed">(
@@ -16,8 +32,15 @@ export default function AnalysisPage() {
         const fetchAnalysis = async () => {
             setLoading(true);
             try {
-                const data = await getSpendingAnalysis(categoryType);
-                setSpendingData(data);
+                const [trends, top, unusual] = await Promise.all([
+                    getCategoryTrends(categoryType, 5),
+                    getTopTransactions(10, categoryType),
+                    getUnusualTransactions(2.0, 10, categoryType),
+                ]);
+
+                setCategoryTrends(trends);
+                setTopTransactions(top);
+                setUnusualTransactions(unusual);
                 setError(null);
             } catch (err) {
                 setError("Failed to fetch spending analysis");
@@ -29,32 +52,65 @@ export default function AnalysisPage() {
         fetchAnalysis();
     }, [categoryType]);
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("en-CA", {
-            style: "currency",
-            currency: "CAD",
-        }).format(amount);
-    };
+    // Calculate stats from the data
+    const totalSpending =
+        topTransactions.length > 0
+            ? topTransactions.reduce((sum, t) => sum + t.amount, 0)
+            : 0;
 
-    const getMonthName = (month: number) => {
-        return new Date(2024, month - 1, 1).toLocaleString("default", {
-            month: "long",
-        });
-    };
+    const averageTransaction =
+        topTransactions.length > 0 ? totalSpending / topTransactions.length : 0;
 
-    const getCategoryColor = (index: number) => {
-        const colors = [
-            "bg-blue-100 text-blue-800",
-            "bg-green-100 text-green-800",
-            "bg-yellow-100 text-yellow-800",
-            "bg-purple-100 text-purple-800",
-            "bg-pink-100 text-pink-800",
-            "bg-indigo-100 text-indigo-800",
-            "bg-red-100 text-red-800",
-            "bg-orange-100 text-orange-800",
-        ];
-        return colors[index % colors.length];
-    };
+    // Prepare data for pie chart
+    const pieChartData =
+        categoryTrends.length > 0
+            ? categoryTrends.map((trend) => ({
+                  name: trend.category,
+                  value: trend.data.reduce((sum, item) => sum + item.amount, 0),
+              }))
+            : [];
+
+    // Prepare data for trend line chart
+    const trendLineData:
+        | Array<{ month: string; [key: string]: string | number }>
+        | [] =
+        categoryTrends.length > 0 && categoryTrends[0].data.length > 0
+            ? categoryTrends[0].data.map((item) => {
+                  const dataPoint: {
+                      month: string;
+                      [key: string]: string | number;
+                  } = {
+                      month: item.month,
+                  };
+                  categoryTrends.forEach((trend) => {
+                      const monthData = trend.data.find(
+                          (d) => d.month === item.month
+                      );
+                      dataPoint[trend.category] = monthData
+                          ? monthData.amount
+                          : 0;
+                  });
+                  return dataPoint;
+              })
+            : [];
+
+    const trendLines =
+        categoryTrends.length > 0
+            ? categoryTrends.map((trend, index) => {
+                  const colors = [
+                      "#6366f1",
+                      "#8b5cf6",
+                      "#ec4899",
+                      "#f59e0b",
+                      "#10b981",
+                  ];
+                  return {
+                      dataKey: trend.category,
+                      name: trend.category,
+                      color: colors[index % colors.length],
+                  };
+              })
+            : [];
 
     return (
         <div className="space-y-8">
@@ -63,7 +119,7 @@ export default function AnalysisPage() {
                     Spend Analysis
                 </h1>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    View your spending breakdown by category and month
+                    View your spending breakdown by category and trends
                 </p>
             </div>
 
@@ -109,7 +165,7 @@ export default function AnalysisPage() {
             )}
 
             {/* No Data State */}
-            {!loading && !error && spendingData.length === 0 && (
+            {!loading && !error && categoryTrends.length === 0 && (
                 <div className="rounded-lg bg-white p-8 text-center shadow dark:bg-slate-800">
                     <p className="text-gray-500 dark:text-gray-400">
                         No spending data available. Upload and process
@@ -118,95 +174,60 @@ export default function AnalysisPage() {
                 </div>
             )}
 
-            {/* Monthly Spending Cards */}
-            {!loading && !error && spendingData.length > 0 && (
-                <div className="space-y-6">
-                    {spendingData.map((monthData) => (
-                        <div
-                            key={`${monthData.year}-${monthData.month}`}
-                            className="overflow-hidden rounded-lg bg-white shadow dark:bg-slate-800"
-                        >
-                            <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-slate-900">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    {getMonthName(monthData.month)}{" "}
-                                    {monthData.year}
-                                </h2>
-                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                    Total Spending:{" "}
-                                    <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                        {formatCurrency(
-                                            monthData.total_spending
-                                        )}
-                                    </span>
-                                </p>
-                            </div>
-                            <div className="p-6">
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    {monthData.categories
-                                        .sort(
-                                            (a, b) =>
-                                                b.total_amount - a.total_amount
-                                        )
-                                        .map((category, index) => (
-                                            <div
-                                                key={category.category}
-                                                className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
-                                            >
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex-1">
-                                                        <span
-                                                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getCategoryColor(
-                                                                index
-                                                            )}`}
-                                                        >
-                                                            {category.category}
-                                                        </span>
-                                                        <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                                            {formatCurrency(
-                                                                category.total_amount
-                                                            )}
-                                                        </p>
-                                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                            {
-                                                                category.transaction_count
-                                                            }{" "}
-                                                            transaction
-                                                            {category.transaction_count !==
-                                                            1
-                                                                ? "s"
-                                                                : ""}
-                                                        </p>
-                                                        <div className="mt-2">
-                                                            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                                                                <div
-                                                                    className="h-full bg-indigo-600 dark:bg-indigo-500"
-                                                                    style={{
-                                                                        width: `${
-                                                                            (category.total_amount /
-                                                                                monthData.total_spending) *
-                                                                            100
-                                                                        }%`,
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                                {(
-                                                                    (category.total_amount /
-                                                                        monthData.total_spending) *
-                                                                    100
-                                                                ).toFixed(1)}
-                                                                % of total
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+            {/* Analysis Dashboard */}
+            {!loading && !error && categoryTrends.length > 0 && (
+                <>
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        <StatsCard
+                            title="Total Spending"
+                            value={`$${totalSpending.toFixed(2)}`}
+                            icon={DollarSign}
+                        />
+                        <StatsCard
+                            title="Categories Tracked"
+                            value={categoryTrends.length}
+                            icon={Wallet}
+                        />
+                        <StatsCard
+                            title="Top Transaction"
+                            value={
+                                topTransactions.length > 0
+                                    ? `$${topTransactions[0].amount.toFixed(2)}`
+                                    : "$0"
+                            }
+                            icon={TrendingUp}
+                        />
+                        <StatsCard
+                            title="Avg Transaction"
+                            value={`$${averageTransaction.toFixed(2)}`}
+                            icon={TrendingDown}
+                        />
+                    </div>
+
+                    {/* Charts Row */}
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <SpendingPieChart
+                            data={pieChartData}
+                            title="Spending by Category"
+                        />
+                        {trendLineData.length > 0 && (
+                            <TrendLineChart
+                                data={trendLineData}
+                                lines={trendLines}
+                                title="Category Trends Over Time"
+                            />
+                        )}
+                    </div>
+
+                    {/* Tables Row */}
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <TopTransactionsTable transactions={topTransactions} />
+                        <UnusualTransactionsTable
+                            transactions={unusualTransactions}
+                        />
+                    </div>
+                </>
             )}
         </div>
     );

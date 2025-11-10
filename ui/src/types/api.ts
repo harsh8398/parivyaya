@@ -40,3 +40,29 @@ export interface MonthlySpending {
     categories: CategorySpending[];
     total_spending: number;
 }
+
+export interface TopTransaction {
+    id: number;
+    date: string;
+    title: string;
+    amount: number;
+    category: string;
+}
+
+export interface UnusualTransaction {
+    id: number;
+    date: string;
+    title: string;
+    amount: number;
+    category: string;
+    average_amount: number;
+    deviation_percentage: number;
+}
+
+export interface CategoryTrend {
+    category: string;
+    data: Array<{
+        month: string;
+        amount: number;
+    }>;
+}

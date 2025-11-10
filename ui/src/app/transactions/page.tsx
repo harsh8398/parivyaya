@@ -84,7 +84,10 @@ export default function TransactionsPage() {
                         >
                             <option value="">All Jobs</option>
                             {jobs
-                                .filter((job) => job.status === "completed")
+                                .filter(
+                                    (job) =>
+                                        job.status.toLowerCase() === "completed"
+                                )
                                 .map((job) => (
                                     <option key={job.id} value={job.id}>
                                         {job.filename} ({job.transaction_count}{" "}
