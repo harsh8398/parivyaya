@@ -2,7 +2,7 @@
 
 A tool to analyze your spending from financial statements using AI. "[Parivyaya](https://www.sanskritdictionary.com/parivyaya/129919/1)" is a Sanskrit word meaning "expense."
 
-> **🌐 [View Live Demo](https://parivyaya.augnmntd.ai)**
+> **🌐 [View Live Demo](https://parivyaya.augmntd.ai)**
 
 ![Upload Screenshot](screenshots/demo.png)
 
