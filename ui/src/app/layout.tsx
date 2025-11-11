@@ -1,3 +1,4 @@
+import DemoBanner from "@/components/DemoBanner";
 import Navigation from "@/components/Navigation";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -40,6 +41,7 @@ export default function RootLayout({
             <body
                 className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-white text-gray-900 antialiased dark:bg-slate-900 dark:text-gray-100`}
             >
+                <DemoBanner />
                 <Navigation />
                 <main className="mx-auto max-w-7xl bg-gray-50 px-4 py-8 dark:bg-slate-900 sm:px-6 lg:px-8">
                     {children}

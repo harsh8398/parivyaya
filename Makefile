@@ -5,7 +5,7 @@ dev: ## Start UI in dev mode
 	cd ui && npm run dev
 
 demo: ## Build and serve static demo site with dummy data
-	cd ui && NEXT_PUBLIC_DEMO_MODE=true npm run build && npx serve@latest out
+	cd ui && NEXT_PUBLIC_DEMO_MODE=true npm run dev
 
 # Docker Compose
 build: ## Build all Docker images
