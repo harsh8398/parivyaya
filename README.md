@@ -2,7 +2,7 @@
 
 A tool to analyze your spending from financial statements. "[Parivyaya](https://www.sanskritdictionary.com/parivyaya/129919/1)" is a Sanskrit word meaning "expense."
 
-![Upload Screenshot](screenshots/upload.png)
+![Upload Screenshot](screenshots/demo.png)
 
 ## Quick Flow
 
@@ -18,24 +18,84 @@ A tool to analyze your spending from financial statements. "[Parivyaya](https://
 - **Spending Analysis**: Visualize spending patterns by category and month
 - **Real-time Updates**: Live job status tracking in the UI
 - **Delete Jobs**: Remove jobs and their associated transactions
+- **Demo Mode**: Static site generation with dummy data for GitHub Pages deployment
+
+> **🌐 [View Live Demo](https://parivyaya.augnmntd.ai)** - See the application in action with sample data!
 
 ## Architecture
 
-### Backend (Python/FastAPI)
-- FastAPI REST API for transaction management
-- Apache Kafka 4.1.1 for async job processing
-- SQLAlchemy with async PostgreSQL 17
-- Google Gemini AI via LangChain for PDF parsing and transaction extraction
-- Alembic for database migrations
+```mermaid
+graph TB
+    subgraph "Frontend (Next.js)"
+        UI[Next.js App<br/>React 19 + TypeScript]
+        Upload[Upload Page]
+        Transactions[Transactions Page]
+        Analysis[Analysis Page]
+        
+        UI --> Upload
+        UI --> Transactions
+        UI --> Analysis
+    end
+    
+    subgraph "Backend (FastAPI)"
+        API[FastAPI REST API<br/>Python 3.14]
+        Routes[Route Handlers]
+        DB_Layer[SQLAlchemy ORM<br/>Async]
+        
+        API --> Routes
+        Routes --> DB_Layer
+    end
+    
+    subgraph "Async Processing"
+        Kafka[Apache Kafka 4.1.1<br/>Message Queue]
+        Worker[Kafka Worker<br/>Consumer]
+        Gemini[Google Gemini AI<br/>via LangChain]
+        
+        Worker --> Kafka
+        Worker --> Gemini
+        Worker --> DB_Layer
+    end
+    
+    subgraph "Data Layer"
+        PostgreSQL[(PostgreSQL 17<br/>Database)]
+        Alembic[Alembic<br/>Migrations]
+        
+        DB_Layer --> PostgreSQL
+        Alembic -.-> PostgreSQL
+    end
+    
+    UI -->|HTTP/REST| API
+    Upload -->|POST /upload| API
+    Transactions -->|GET /transactions| API
+    Analysis -->|GET /spending/analysis| API
+    
+    Routes -->|Job Creation| Kafka
+    Gemini -->|Extract Transactions<br/>Classify Categories| Worker
+    
+    style UI fill:#61dafb,stroke:#333,stroke-width:2px
+    style API fill:#009688,stroke:#333,stroke-width:2px
+    style Kafka fill:#231f20,stroke:#333,stroke-width:2px,color:#fff
+    style PostgreSQL fill:#336791,stroke:#333,stroke-width:2px,color:#fff
+    style Gemini fill:#8e75b2,stroke:#333,stroke-width:2px
+```
 
-### Frontend (Next.js)
+### Component Details
+
+**Frontend (Next.js)**
 - React 19 with Next.js 16
 - Tailwind CSS v4 for styling
 - TypeScript for type safety
 - Real-time job status updates
 - Three main views: Upload, Transactions, and Analysis
 
-### Infrastructure
+**Backend (Python/FastAPI)**
+- FastAPI REST API for transaction management
+- Apache Kafka 4.1.1 for async job processing
+- SQLAlchemy with async PostgreSQL 17
+- Google Gemini AI via LangChain for PDF parsing and transaction extraction
+- Alembic for database migrations
+
+**Infrastructure**
 - Docker Compose for local development
 - PostgreSQL for data persistence
 - Kafka for message queuing
@@ -118,6 +178,7 @@ A tool to analyze your spending from financial statements. "[Parivyaya](https://
 3. Create `.env.local`:
    ```
    NEXT_PUBLIC_API_URL=http://localhost:8000
+   NEXT_PUBLIC_DEMO_MODE=false
    ```
 
 4. Start the development server:
@@ -164,6 +225,8 @@ Full API documentation available at: http://localhost:8000/docs (when running)
 
 ## Usage
 
+### Production Mode
+
 1. **Start the application:**
    ```bash
    export GOOGLE_API_KEY=your_key
@@ -183,6 +246,19 @@ Full API documentation available at: http://localhost:8000/docs (when running)
    make down      # Stop services (keep data)
    make clean-db  # Stop services and delete data
    ```
+
+### Demo Mode (Static Site)
+
+Build and preview a static version with dummy data:
+
+```bash
+cd ui
+cp .env.demo .env.local
+npm run build
+npx serve@latest out
+```
+
+For detailed instructions on demo mode and GitHub Pages deployment, see [DEMO_MODE.md](DEMO_MODE.md).
 
 ## Project Structure
 

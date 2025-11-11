@@ -1,8 +1,11 @@
-.PHONY: dev build up down logs psql clean clean-db help
+.PHONY: dev build up down logs psql clean clean-db demo help
 
 # Development
 dev: ## Start UI in dev mode
 	cd ui && npm run dev
+
+demo: ## Build and serve static demo site with dummy data
+	cd ui && NEXT_PUBLIC_DEMO_MODE=true npm run build && npx serve@latest out
 
 # Docker Compose
 build: ## Build all Docker images
